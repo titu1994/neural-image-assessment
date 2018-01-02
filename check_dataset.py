@@ -51,8 +51,6 @@ train_scores = train_scores[:-5000]
 def parse_data(filename):
     image = tf.read_file(filename)
     image = tf.image.decode_jpeg(image, channels=3)
-    #image = tf.image.resize_images(image, (IMAGE_SIZE, IMAGE_SIZE))
-    #image = (tf.cast(image, tf.float32) - 127.5) / 127.5
     return image
 
 sess = tf.Session()
@@ -66,7 +64,6 @@ with sess.as_default():
     for path in train_image_paths:
         try:
             sess.run(img, feed_dict={fn: path})
-            #print('Loaded currectly')
         except Exception as e:
             print(path, "failed to load !")
             print()
