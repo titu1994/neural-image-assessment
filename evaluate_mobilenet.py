@@ -18,7 +18,7 @@ with tf.device('/CPU:0'):
     model = Model(base_model.input, x)
     model.load_weights('weights/mobilenet_weights.h5')
 
-    img_path = 'images/art6.jpg'
+    img_path = 'images/img1.jpg'
     img = load_img(img_path) # target_size=(image_size, image_size)
     x = img_to_array(img)
 
