@@ -58,6 +58,13 @@ def parse_data(filename, scores):
     image = (tf.cast(image, tf.float32) - 127.5) / 127.5
     return image, scores
 
+def parse_data_validation(filename, scores):
+    image = tf.read_file(filename)
+    image = tf.image.decode_jpeg(image, channels=3)
+    image = tf.image.resize_images(image, (IMAGE_SIZE, IMAGE_SIZE))
+    image = (tf.cast(image, tf.float32) - 127.5) / 127.5
+    return image, scores
+
 print('Train and validation datasets ready !')
 
 def train_generator(batchsize):
@@ -89,7 +96,7 @@ def train_generator(batchsize):
 def val_generator(batchsize):
     with tf.Session() as sess:
         val_dataset = tfdata.Dataset().from_tensor_slices((val_image_paths, val_scores))
-        val_dataset = val_dataset.map(parse_data)
+        val_dataset = val_dataset.map(parse_data_validation)
 
         val_dataset = val_dataset.batch(batchsize)
         val_dataset = val_dataset.repeat()
