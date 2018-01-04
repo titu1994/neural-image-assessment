@@ -47,7 +47,7 @@ class TensorBoardBatch(TensorBoard):
         self.writer.flush()
 
 def earth_mover_loss(y_true, y_pred):
-    return K.sqrt(K.mean(K.square(K.abs(y_true - y_pred))))
+    return K.sqrt(K.mean(K.square(K.abs(K.cumsum(y_true, axis=-1) - K.cumsum(y_pred, axis=-1)))))
 
 image_size = 224
 
@@ -67,7 +67,7 @@ checkpoint = ModelCheckpoint('weights/mobilenet_weights.h5', monitor='val_loss',
 tensorboard = TensorBoardBatch()
 callbacks = [checkpoint, tensorboard]
 
-batchsize = 128
+batchsize = 200
 epochs = 20
 
 model.fit_generator(train_generator(batchsize=batchsize),

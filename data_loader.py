@@ -8,8 +8,8 @@ from skimage.transform import resize
 import tensorflow as tf
 from tensorflow import data as tfdata
 
-base_images_path = r''
-ava_dataset_path = r'AVA_dataset\AVA.txt'
+base_images_path = r'D:\Yue\Documents\Datasets\AVA_dataset\images\images\\'
+ava_dataset_path = r'D:\Yue\Documents\Datasets\AVA_dataset\AVA.txt'
 
 IMAGE_SIZE = 224
 BASE_LEN = len(base_images_path) - 1
