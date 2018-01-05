@@ -53,7 +53,8 @@ print('Val set size : ', val_image_paths.shape, val_scores.shape)
 def parse_data(filename, scores):
     image = tf.read_file(filename)
     image = tf.image.decode_jpeg(image, channels=3)
-    image = tf.image.resize_images(image, (IMAGE_SIZE, IMAGE_SIZE))
+    image = tf.image.resize_images(image, (256, 256))
+    image = tf.random_crop(image, size=(IMAGE_SIZE, IMAGE_SIZE, 3))
     image = tf.image.random_flip_left_right(image)
     image = (tf.cast(image, tf.float32) - 127.5) / 127.5
     return image, scores
