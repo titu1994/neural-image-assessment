@@ -1,7 +1,10 @@
+import os
+
 from keras.models import Model
 from keras.layers import Dense, Dropout
 from keras.applications.mobilenet import MobileNet
 from keras.callbacks import ModelCheckpoint, TensorBoard
+from keras.optimizers import Adam
 from keras import backend as K
 
 from data_loader import train_generator, val_generator
@@ -47,7 +50,10 @@ class TensorBoardBatch(TensorBoard):
         self.writer.flush()
 
 def earth_mover_loss(y_true, y_pred):
-    return K.sqrt(K.mean(K.square(K.abs(K.cumsum(y_true, axis=-1) - K.cumsum(y_pred, axis=-1)))))
+    cdf_ytrue = K.cumsum(y_true, axis=-1)
+    cdf_ypred = K.cumsum(y_pred, axis=-1)
+    samplewise_emd = K.sqrt(K.mean(K.square(K.abs(cdf_ytrue - cdf_ypred)), axis=-1))
+    return K.mean(samplewise_emd)
 
 image_size = 224
 
@@ -60,7 +66,12 @@ x = Dense(10, activation='softmax')(x)
 
 model = Model(base_model.input, x)
 model.summary()
-model.compile('adam', loss=earth_mover_loss)
+optimizer = Adam(lr=1e-4)
+model.compile(optimizer, loss=earth_mover_loss)
+
+# load weights from trained model if it exists
+if os.path.exists('weights/mobilenet_weights.h5'):
+    model.load_weights('weights/mobilenet_weights.h5')
 
 checkpoint = ModelCheckpoint('weights/mobilenet_weights.h5', monitor='val_loss', verbose=1, save_weights_only=True, save_best_only=True,
                              mode='min')
