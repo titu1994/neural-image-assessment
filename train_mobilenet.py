@@ -66,7 +66,7 @@ x = Dense(10, activation='softmax')(x)
 
 model = Model(base_model.input, x)
 model.summary()
-optimizer = Adam(lr=1e-4)
+optimizer = Adam(lr=1e-3)
 model.compile(optimizer, loss=earth_mover_loss)
 
 # load weights from trained model if it exists
