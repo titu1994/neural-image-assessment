@@ -6,6 +6,8 @@ NIMA assigns a Mean + Standard Deviation score to images, and can be used as a t
 # Example
 <img src="https://github.com/titu1994/neural-image-assessment/blob/master/images/NIMA.jpg?raw=true" height=100% width=100%>
 
+<img src="https://github.com/titu1994/neural-image-assessment/blob/master/images/NIMA2.jpg?raw=true" height=100% width=100%>
+
 # Requirements
 - Keras
 - Tensorflow (CPU to evaluate, GPU to train)
