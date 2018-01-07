@@ -6,7 +6,6 @@ from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.optimizers import Adam
 from keras import backend as K
 
-
 from data_loader import features_generator
 
 '''

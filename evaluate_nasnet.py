@@ -5,8 +5,8 @@ from keras.layers import Dense, Dropout
 from keras.preprocessing.image import load_img, img_to_array
 import tensorflow as tf
 
-from nasnet import NASNetMobile, preprocess_input
-from utils import mean_score, std_score
+from utils.nasnet import NASNetMobile, preprocess_input
+from utils.score_utils import mean_score, std_score
 
 with tf.device('/CPU:0'):
     base_model = NASNetMobile((224, 224, 3), include_top=False, pooling='avg', weights=None)

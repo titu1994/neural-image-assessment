@@ -2,11 +2,7 @@ import numpy as np
 import os
 import glob
 
-from skimage.io import imread, imsave
-from skimage.transform import resize
-
 import tensorflow as tf
-from tensorflow import data as tfdata
 
 base_images_path = r'D:\Yue\Documents\Datasets\AVA_dataset\images\images\\'
 ava_dataset_path = r'D:\Yue\Documents\Datasets\AVA_dataset\AVA.txt'

@@ -8,7 +8,7 @@ from keras.preprocessing.image import load_img, img_to_array
 
 import tensorflow as tf
 
-from utils import mean_score, std_score
+from utils.score_utils import mean_score, std_score
 
 with tf.device('/CPU:0'):
     base_model = MobileNet((None, None, 3), alpha=1, include_top=False, pooling='avg', weights=None)
