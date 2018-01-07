@@ -59,7 +59,7 @@ def parse_data(filename, scores):
     image = (tf.cast(image, tf.float32) - 127.5) / 127.5
     return image, scores
 
-def parse_data_validation(filename, scores):
+def parse_data_without_augmentation(filename, scores):
     image = tf.read_file(filename)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.resize_images(image, (IMAGE_SIZE, IMAGE_SIZE))
@@ -68,14 +68,15 @@ def parse_data_validation(filename, scores):
 
 print('Train and validation datasets ready !')
 
-def train_generator(batchsize):
+def train_generator(batchsize, shuffle=True):
     with tf.Session() as sess:
         train_dataset = tfdata.Dataset().from_tensor_slices((train_image_paths, train_scores))
-        train_dataset = train_dataset.map(parse_data)
+        train_dataset = train_dataset.map(parse_data, num_parallel_calls=2)
 
         train_dataset = train_dataset.batch(batchsize)
         train_dataset = train_dataset.repeat()
-        train_dataset = train_dataset.shuffle(buffer_size=4)
+        if shuffle:
+            train_dataset = train_dataset.shuffle(buffer_size=4)
         train_iterator = train_dataset.make_initializable_iterator()
 
         train_batch = train_iterator.get_next()
@@ -97,11 +98,10 @@ def train_generator(batchsize):
 def val_generator(batchsize):
     with tf.Session() as sess:
         val_dataset = tfdata.Dataset().from_tensor_slices((val_image_paths, val_scores))
-        val_dataset = val_dataset.map(parse_data_validation)
+        val_dataset = val_dataset.map(parse_data_without_augmentation)
 
         val_dataset = val_dataset.batch(batchsize)
         val_dataset = val_dataset.repeat()
-        val_dataset = val_dataset.shuffle(buffer_size=4)
         val_iterator = val_dataset.make_initializable_iterator()
 
         val_batch = val_iterator.get_next()
@@ -118,4 +118,44 @@ def val_generator(batchsize):
                 val_batch = val_iterator.get_next()
 
                 X_batch, y_batch = sess.run(val_batch)
+                yield (X_batch, y_batch)
+
+def features_generator(record_path, batchsize, shuffle=True):
+    with tf.Session() as sess:
+        def parse_single_record(serialized_example):
+            # parse a single record
+            example = tf.parse_single_example(
+                serialized_example,
+                features={
+                    'features': tf.FixedLenFeature([1056], tf.float32),
+                    'scores': tf.FixedLenFeature([10], tf.float32),
+                })
+
+            features = example['features']
+            scores = example['scores']
+            return features, scores
+
+        train_dataset = tfdata.TFRecordDataset([record_path])
+        train_dataset = train_dataset.map(parse_single_record, num_parallel_calls=4)
+
+        train_dataset = train_dataset.batch(batchsize)
+        train_dataset = train_dataset.repeat()
+        if shuffle:
+            train_dataset = train_dataset.shuffle(buffer_size=5)
+        train_iterator = train_dataset.make_initializable_iterator()
+
+        train_batch = train_iterator.get_next()
+
+        sess.run(train_iterator.initializer)
+
+        while True:
+            try:
+                X_batch, y_batch = sess.run(train_batch)
+                yield (X_batch, y_batch)
+            except:
+                train_iterator = train_dataset.make_initializable_iterator()
+                sess.run(train_iterator.initializer)
+                train_batch = train_iterator.get_next()
+
+                X_batch, y_batch = sess.run(train_batch)
                 yield (X_batch, y_batch)
