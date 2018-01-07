@@ -8,7 +8,7 @@ from keras import backend as K
 
 from utils.nasnet import NASNetMobile
 
-from data_loader import train_generator, val_generator
+from utils.data_loader import train_generator, val_generator
 
 '''
 Below is a modification to the TensorBoard callback to perform 

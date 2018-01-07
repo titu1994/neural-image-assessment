@@ -6,7 +6,7 @@ from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.optimizers import Adam
 from keras import backend as K
 
-from data_loader import features_generator
+from utils.data_loader import features_generator
 
 '''
 Below is a modification to the TensorBoard callback to perform 
