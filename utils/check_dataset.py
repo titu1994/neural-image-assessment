@@ -4,6 +4,12 @@ import glob
 
 import tensorflow as tf
 
+'''
+Checks all images from the AVA dataset if they have corrupted jpegs, and lists them for removal.
+
+Removal must be done manually !
+'''
+
 base_images_path = r'D:\Yue\Documents\Datasets\AVA_dataset\images\images\\'
 ava_dataset_path = r'D:\Yue\Documents\Datasets\AVA_dataset\AVA.txt'
 
