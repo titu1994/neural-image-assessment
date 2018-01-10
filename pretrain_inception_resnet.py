@@ -1,14 +1,12 @@
 import os
 
 from keras.models import Model
-from keras.layers import Dense, Dropout
+from keras.layers import Input, Dense, Dropout
 from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.optimizers import Adam
 from keras import backend as K
 
-from utils.nasnet import NASNetMobile
-
-from utils.data_loader import train_generator, val_generator
+from utils.data_loader import features_generator
 
 '''
 Below is a modification to the TensorBoard callback to perform 
@@ -57,28 +55,20 @@ def earth_mover_loss(y_true, y_pred):
     return K.mean(samplewise_emd)
 
 image_size = 224
-
-base_model = NASNetMobile((image_size, image_size, 3), include_top=False, pooling='avg', weight_decay=0, dropout=0)
-for layer in base_model.layers:
-    layer.trainable = False
-
-x = Dropout(0.75)(base_model.output)
+ip = Input(shape=(1536,))
+x = Dropout(0.75)(ip)
 x = Dense(10, activation='softmax')(x)
 
-model = Model(base_model.input, x)
+model = Model(ip, x)
 model.summary()
 optimizer = Adam(lr=1e-4)
 model.compile(optimizer, loss=earth_mover_loss)
 
 # load weights from trained model if it exists
-if os.path.exists('weights/nasnet_weights.h5'):
-    model.load_weights('weights/nasnet_weights.h5')
+if os.path.exists('weights/inception_resnet_pretrained_weights.h5'):
+    model.load_weights('weights/inception_resnet_pretrained_weights.h5')
 
-# load pre-trained NIMA(NASNet Mobile) classifier weights
-# if os.path.exists('weights/nasnet_pretrained_weights.h5'):
-#     model.load_weights('weights/nasnet_pretrained_weights.h5', by_name=True)
-
-checkpoint = ModelCheckpoint('weights/nasnet_weights.h5', monitor='val_loss', verbose=1, save_weights_only=True, save_best_only=True,
+checkpoint = ModelCheckpoint('weights/inception_resnet_pretrained_weights.h5', monitor='val_loss', verbose=1, save_weights_only=True, save_best_only=True,
                              mode='min')
 tensorboard = TensorBoardBatch(log_dir='./nasnet_logs/')
 callbacks = [checkpoint, tensorboard]
@@ -86,8 +76,11 @@ callbacks = [checkpoint, tensorboard]
 batchsize = 200
 epochs = 20
 
-model.fit_generator(train_generator(batchsize=batchsize),
-                    steps_per_epoch=(250000. // batchsize),
+TRAIN_RECORD_PATH = 'weights/inception_resnet_train.tfrecord'
+VAL_RECORD_PATH = 'weights/inception_resnet_val.tfrecord'
+
+model.fit_generator(features_generator(TRAIN_RECORD_PATH, batchsize=batchsize, shuffle=True),
+                    steps_per_epoch=(500000. // batchsize),
                     epochs=epochs, verbose=1, callbacks=callbacks,
-                    validation_data=val_generator(batchsize=batchsize),
+                    validation_data=features_generator(VAL_RECORD_PATH, batchsize=batchsize, shuffle=False),
                     validation_steps=(5000. // batchsize))
