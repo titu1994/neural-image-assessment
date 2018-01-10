@@ -4,7 +4,7 @@ Implementation of [NIMA: Neural Image Assessment](https://arxiv.org/abs/1709.054
 NIMA assigns a Mean + Standard Deviation score to images, and can be used as a tool to automatically inspect quality of images or as a loss function to further improve the quality of generated images.
 
 Contains weights trained on the AVA dataset for the following models:
-- Inception ResNet v2 (~ 0.07 EMD on valset, thanks to @tfriedel !)
+- Inception ResNet v2 (~ 0.07 EMD on valset, thanks to [@tfriedel](https://github.com/tfriedel) !)
 - MobileNet (0.0804 EMD on valset)
 - NASNet Mobile (0.0848 EMD on valset, not finetuned yet)
 
