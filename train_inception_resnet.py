@@ -2,11 +2,10 @@ import os
 
 from keras.models import Model
 from keras.layers import Dense, Dropout
+from keras.applications.inception_resnet_v2 import InceptionResNetV2
 from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.optimizers import Adam
 from keras import backend as K
-
-from utils.nasnet import NASNetMobile
 
 from utils.data_loader import train_generator, val_generator
 
@@ -17,7 +16,7 @@ of the batch.
 '''
 class TensorBoardBatch(TensorBoard):
     def __init__(self, *args, **kwargs):
-        super(TensorBoardBatch, self).__init__(*args, **kwargs)
+        super(TensorBoardBatch, self).__init__(*args)
 
         # conditionally import tensorflow iff TensorBoardBatch is created
         self.tf = __import__('tensorflow')
@@ -58,7 +57,7 @@ def earth_mover_loss(y_true, y_pred):
 
 image_size = 224
 
-base_model = NASNetMobile((image_size, image_size, 3), include_top=False, pooling='avg', weight_decay=0, dropout=0)
+base_model = InceptionResNetV2(input_shape=(image_size, image_size, 3), include_top=False, pooling='avg')
 for layer in base_model.layers:
     layer.trainable = False
 
@@ -67,23 +66,23 @@ x = Dense(10, activation='softmax')(x)
 
 model = Model(base_model.input, x)
 model.summary()
-optimizer = Adam(lr=1e-4)
+optimizer = Adam(lr=1e-3)
 model.compile(optimizer, loss=earth_mover_loss)
 
 # load weights from trained model if it exists
-if os.path.exists('weights/nasnet_weights.h5'):
-    model.load_weights('weights/nasnet_weights.h5')
+if os.path.exists('weights/inception_resnet_weights.h5'):
+    model.load_weights('weights/inception_resnet_weights.h5')
 
-# load pre-trained NIMA(NASNet Mobile) classifier weights
-# if os.path.exists('weights/nasnet_pretrained_weights.h5'):
-#     model.load_weights('weights/nasnet_pretrained_weights.h5', by_name=True)
+# load pre-trained NIMA(Inception ResNet V2) classifier weights
+# if os.path.exists('weights/inception_resnet_pretrained_weights.h5'):
+#     model.load_weights('weights/inception_resnet_pretrained_weights.h5', by_name=True)
 
-checkpoint = ModelCheckpoint('weights/nasnet_weights.h5', monitor='val_loss', verbose=1, save_weights_only=True, save_best_only=True,
+checkpoint = ModelCheckpoint('weights/inception_resnet_weights.h5', monitor='val_loss', verbose=1, save_weights_only=True, save_best_only=True,
                              mode='min')
-tensorboard = TensorBoardBatch(log_dir='./nasnet_logs/')
+tensorboard = TensorBoardBatch()
 callbacks = [checkpoint, tensorboard]
 
-batchsize = 200
+batchsize = 100
 epochs = 20
 
 model.fit_generator(train_generator(batchsize=batchsize),
