@@ -21,9 +21,13 @@ parser.add_argument('-img', type=str, default=[None], nargs='+',
 parser.add_argument('-resize', type=str, default='false',
                     help='Resize images to 224x224 before scoring')
 
+parser.add_argument('-rank', type=str, default='true',
+                    help='Whether to tank the images after they have been scored')
+
 args = parser.parse_args()
 resize_image = args.resize.lower() in ("true", "yes", "t", "1")
 target_size = (224, 224) if resize_image else None
+rank_images = args.rank.lower() in ("true", "yes", "t", "1")
 
 # give priority to directory
 if args.dir is not None:
@@ -47,6 +51,8 @@ with tf.device('/CPU:0'):
     model = Model(base_model.input, x)
     model.load_weights('weights/inception_resnet_weights.h5')
 
+    score_list = []
+
     for img_path in imgs:
         img = load_img(img_path, target_size=target_size)
         x = img_to_array(img)
@@ -59,8 +65,18 @@ with tf.device('/CPU:0'):
         mean = mean_score(scores)
         std = std_score(scores)
 
+        file_name = Path(img_path).name.lower()
+        score_list.append((file_name, mean))
+
         print("Evaluating : ", img_path)
         print("NIMA Score : %0.3f +- (%0.3f)" % (mean, std))
         print()
+
+    if rank_images:
+        print("*" * 40, "Ranking Images", "*" * 40)
+        score_list = sorted(score_list, key=lambda x: x[1], reverse=True)
+
+        for i, (name, score) in enumerate(score_list):
+            print("%d)" % (i + 1), "%s : Score = %0.5f" % (name, score))
 
 
