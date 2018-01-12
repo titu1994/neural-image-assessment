@@ -40,7 +40,7 @@ with tf.device('/CPU:0'):
     x = Dense(10, activation='softmax')(x)
 
     model = Model(base_model.input, x)
-    model.load_weights('weights/nasnet_weights.h5', by_name=True)
+    model.load_weights('weights/nasnet_weights.h5')
 
     for img_path in imgs:
         img = load_img(img_path, target_size=target_size)
