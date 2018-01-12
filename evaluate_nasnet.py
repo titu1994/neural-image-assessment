@@ -1,20 +1,23 @@
-import numpy as np
 import argparse
-from path import Path
+import csv
 
-from keras.models import Model
-from keras.layers import Dense, Dropout
-from keras.preprocessing.image import load_img, img_to_array
+import numpy as np
 import tensorflow as tf
+from keras.layers import Dense, Dropout
+from keras.models import Model
+from path import Path
+from tqdm import tqdm
 
-from utils.nasnet import NASNetMobile, preprocess_input
+from utils.image_utils import preprocess_for_evaluation
+from utils.nasnet import NASNetMobile
 from utils.score_utils import mean_score, std_score
 
-parser = argparse.ArgumentParser(description='Evaluate NIMA(Inception ResNet v2)')
-parser.add_argument('-dir', type=str, default=None,
+parser = argparse.ArgumentParser(
+    description='Evaluate NIMA(NASNet mobile)')
+parser.add_argument('--dir', type=str, default=None,
                     help='Pass a directory to evaluate the images in it')
 
-parser.add_argument('-img', type=str, default=[None], nargs='+',
+parser.add_argument('--img', type=str, default=[None], nargs='+',
                     help='Pass one or more image paths to evaluate them')
 
 args = parser.parse_args()
@@ -32,30 +35,35 @@ elif args.img[0] is not None:
     imgs = args.img
 
 else:
-    raise RuntimeError('Either -dir or -img arguments must be passed as argument')
+    raise RuntimeError(
+        'Either --dir or --img arguments must be passed as argument')
 
-with tf.device('/CPU:0'):
-    base_model = NASNetMobile((224, 224, 3), include_top=False, pooling='avg', weights=None)
+scored_images = []
+with tf.device('/GPU:0'):
+    base_model = NASNetMobile((224, 224, 3), include_top=False, pooling='avg',
+                              weights=None)
     x = Dropout(0.75)(base_model.output)
     x = Dense(10, activation='softmax')(x)
-
     model = Model(base_model.input, x)
-    model.load_weights('weights/nasnet_weights.h5', by_name=True)
-
-    for img_path in imgs:
-        img = load_img(img_path, target_size=target_size)
-        x = img_to_array(img)
+    model.load_weights('weights/nasnet_weights.h5')
+    for img_path in tqdm(imgs):
+        try:
+            x = preprocess_for_evaluation(img_path)
+        except OSError as e:
+            print("Couldn't process {}".format(img_path))
+            print(e)
+            continue
         x = np.expand_dims(x, axis=0)
-
-        x = preprocess_input(x)
-
         scores = model.predict(x, batch_size=1, verbose=0)[0]
 
         mean = mean_score(scores)
         std = std_score(scores)
 
-        print("Evaluating : ", img_path)
-        print("NIMA Score : %0.3f +- (%0.3f)" % (mean, std))
-        print()
-
-
+        scored_images.append((mean, std, img_path))
+    scored_images = sorted(scored_images, reverse=True)
+    with open('results.csv', 'w', encoding="utf-8") as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter=';', lineterminator='\n')
+        csvwriter.writerow(['filename', 'mean', 'std'])
+        for mean, std, img_path in scored_images:
+            print("{:.3f} +- ({:.3f})  {}".format(mean, std, img_path))
+            csvwriter.writerow([img_path, mean, std])

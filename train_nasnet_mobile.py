@@ -5,9 +5,10 @@ from keras.layers import Dense, Dropout
 from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.optimizers import Adam
 from keras import backend as K
-
+import numpy as np
+from tqdm import tqdm
 from utils.nasnet import NASNetMobile
-
+from utils.score_utils import srcc
 from utils.data_loader import train_generator, val_generator
 
 '''
@@ -56,6 +57,19 @@ def earth_mover_loss(y_true, y_pred):
     samplewise_emd = K.sqrt(K.mean(K.square(K.abs(cdf_ytrue - cdf_ypred)), axis=-1))
     return K.mean(samplewise_emd)
 
+def calc_srcc():
+    y_test = []
+    y_pred = []
+    gen = val_generator(batchsize=batchsize)
+    for i in tqdm(range(5000 // batchsize)):
+        batch = next(gen)
+        y_test.append(batch[1])
+        y_pred.append(model.predict_on_batch(batch[0]))
+    y_test = np.concatenate(y_test)
+    y_pred = np.concatenate(y_pred)
+    rho = srcc(y_test, y_pred)
+    print("srcc = {}".format(rho))
+
 image_size = 224
 
 base_model = NASNetMobile((image_size, image_size, 3), include_top=False, pooling='avg', weight_decay=0, dropout=0)
@@ -72,6 +86,7 @@ model.compile(optimizer, loss=earth_mover_loss)
 
 # load weights from trained model if it exists
 if os.path.exists('weights/nasnet_weights.h5'):
+    print("loading weights")
     model.load_weights('weights/nasnet_weights.h5')
 
 # load pre-trained NIMA(NASNet Mobile) classifier weights
@@ -86,8 +101,10 @@ callbacks = [checkpoint, tensorboard]
 batchsize = 200
 epochs = 20
 
-model.fit_generator(train_generator(batchsize=batchsize),
-                    steps_per_epoch=(250000. // batchsize),
-                    epochs=epochs, verbose=1, callbacks=callbacks,
-                    validation_data=val_generator(batchsize=batchsize),
-                    validation_steps=(5000. // batchsize))
+# model.fit_generator(train_generator(batchsize=batchsize),
+#                     steps_per_epoch=(250000. // batchsize),
+#                     epochs=epochs, verbose=1, callbacks=callbacks,
+#                     validation_data=val_generator(batchsize=batchsize),
+#                     validation_steps=(5000. // batchsize))
+
+calc_srcc()
