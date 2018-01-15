@@ -1,8 +1,15 @@
 import numpy as np
 from PIL import Image, ImageOps
+import warnings
 
 IMAGE_SIZE = 256
 CROP_SIZE = 224
+
+
+warnings.filterwarnings('ignore', r'Possibly corrupt EXIF data',
+                        UserWarning, "PIL.TiffImagePlugin",0)
+warnings.filterwarnings('ignore', r'Corrupt EXIF data',
+                        UserWarning, "PIL.TiffImagePlugin",0)
 
 
 def crop_center(img, height, width):
