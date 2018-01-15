@@ -21,7 +21,7 @@ parser.add_argument('--img', type=str, default=[None], nargs='+',
                     help='Pass one or more image paths to evaluate them')
 
 args = parser.parse_args()
-target_size = (224, 224)  # NASNet requires strict size set to 224x224
+
 
 # give priority to directory
 if args.dir is not None:
