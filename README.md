@@ -33,8 +33,10 @@ Then just run train_nasnet_mobile.py.
 
 
 # Example
+## best ranked images
 <img src="https://github.com/tfriedel/neural-image-assessment/blob/master/images/top_images.jpg?raw=true" height=100% width=100%>
 
+## worst ranked images
 <img src="https://github.com/tfriedel/neural-image-assessment/blob/master/images/bottom_images.jpg?raw=true" height=100% width=100%>
 
 # Requirements
