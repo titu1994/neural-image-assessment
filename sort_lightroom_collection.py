@@ -8,7 +8,7 @@ from path import Path
 # analyzed
 
 DEFAULT_CATALOG = r's:\Pictures\Lightroom\Lightroom Catalog.lrcat'
-LIGHTROOM_COLLECTION_NAME = 'camera uploads'
+LIGHTROOM_COLLECTION_NAME = 'expert_A'
 RESULTS_CSV = r's:\projects\neural-image-assessment\results.csv'
 
 
@@ -103,7 +103,7 @@ def changeOrder(collection_name=LIGHTROOM_COLLECTION_NAME,
           WHERE id_local={}
         """.format(pos, id_local)
         DB.execute(query)
-        # print(query)
+        print(query)
 
     # Save (commit) the changes
     DB.connection.commit()
