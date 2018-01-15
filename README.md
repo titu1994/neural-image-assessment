@@ -12,47 +12,35 @@ Contains weights trained on the AVA dataset for the following models:
 ## Evaluation
 There are `evaluate_*.py` scripts which can be used to evaluate an image using a specific model. The weights for the specific model must be downloaded from the [Releases Tab](https://github.com/titu1994/neural-image-assessment/releases) and placed in the weights directory.
 
-Supports either passing a directory using `-dir` or a set of full paths of specific images using `-img` (seperate multiple image paths using spaces between them)
+Supports either passing a directory using `--dir` or a set of full paths of specific images using `--img` (seperate multiple image paths using spaces between them)
 
-Supports passing an argument `-resize "true/false"` to resize each image to (224x224) or not before passing for NIMA scoring. 
-**Note** : NASNet models do not support this argument, all images **must be resized prior to scoring !**
+There's also a script sort_lightroom_collection.py, which will sort a Adobe Lightroom collection using the calculated scores. For an example see the screenshots.
 
-### Arguments: 
+
+### Arguments:
 ```
 -dir    : Pass the relative/full path of a directory containing a set of images. Only png, jpg and jpeg images will be scored.
--img    : Pass one or more relative/full paths of images to score them. Can support all image types supported by PIL.
--resize : Pass "true" or "false" as values. Resize an image prior to scoring it. Not supported on NASNet models.
+--img    : Pass one or more relative/full paths of images to score them. Can support all image types supported by PIL.
 ```
 
 ## Training
-The AVA dataset is required for training these models. I used 250,000 images to train and the last 5000 images to evaluate (this is not the same format as in the paper).
+The AVA dataset is required for training these models. I used about 240.000 images to train and the last 10.000 images to evaluate (this is not the same format as in the paper).
+You can download it as a torrent from here:
+http://academictorrents.com/details/71631f83b11d3d79d8f84efe0a7e12f0ac001460
 
-First, ensure that the dataset is clean - no currupted JPG files etc by using the `check_dataset.py` script in the utils folder. If such currupted images exist, it will drastically slow down training since the Tensorflow Dataset buffers will constantly flush and reload on each occurance of a currupted image.
+First, ensure that the dataset is clean - no corrupted JPG files etc by using the `check_dataset.py` script in the utils folder. If such currupted images exist, it will drastically slow down training since the Tensorflow Dataset buffers will constantly flush and reload on each occurance of a corrupted image.
+Then just run train_nasnet_mobile.py.
 
-Then, there are two ways of training these models.
-### Direct-Training
-In direct training, you have to ensure that the model can be loaded, trained, evaluated and then saved all on a single GPU. If this cannot be done (because the model is too large), refer to the Pretraining section.
-
-Use the `train_*.py` scripts for direct training. Note, if you want to train other models, copy-paste a train script and only edit the `base_model` creation part, everythin else should likely be the same.
-
-### Pre-Training
-If the model is too large to train directly, training can still be done in a roundabout way (as long as you are able to do inference with a batch of images with the model).
-
-**Note** : One obvious drawback of such a method is that it wont have the performance of the full model without further finetuning. 
-
-This is a 3 step process:
-
-1)  **Extract features from the model**: Use the `extract_*_features.py` script to extract the features from the large model. In this step, you can change the batch_size to be small enough to not overload your GPU memory, and save all the features to 2 TFRecord objects.
-
-2) **Pre-Train the model**: Once the features have been extracted, you can simply train a small feed forward network on those features directly. Since the feed forward network will likely easily fit onto memory, you can use large batch sizes to quickly train the network.
-
-3) **Fine-Tune the model**: This step is optional, only for those who have sufficient memory to load both the large model and the feed forward classifier at the same time. Use the `train_nasnet_mobile.py` as reference as to how to load both the large model and the weights of the feed forward network into this large model and then train fully for several epochs at a lower learning rate.
 
 # Example
-<img src="https://github.com/titu1994/neural-image-assessment/blob/master/images/NIMA.jpg?raw=true" height=100% width=100%>
+<img src="https://github.com/tfriedel/neural-image-assessment/blob/master/images/top_images.jpg?raw=true" height=100% width=100%>
 
-<img src="https://github.com/titu1994/neural-image-assessment/blob/master/images/NIMA2.jpg?raw=true" height=100% width=100%>
+<img src="https://github.com/tfriedel/neural-image-assessment/blob/master/images/bottom_images.jpg?raw=true" height=100% width=100%>
 
 # Requirements
 - Keras
 - Tensorflow (CPU to evaluate, GPU to train)
+- path.py
+- tqdm
+- pillow
+
