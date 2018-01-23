@@ -1,0 +1,18 @@
+Nasnet mobile trained on images which where resized (preserving aspect ratio) and padded to 256x256 images, then randomly cropped to 224x224.
+
+The Spearman's rank correlation coefficient (rho) was calculated on a validation set of
+10.000 images.
+
+Padded images, center cropped to 224x224
+Rho: 0.6573
+
+Padded images, scaled down to 224x224
+Rho: 0.6514
+
+This network was then finetuned (over 5 epochs, with decreasing learning rate) on the training set where the images were resized (no padding) to 256x256, then randomly cropped to 224x224.
+
+Resized images, center cropped to 224x224:
+Rho: 0.6442
+
+Resized images, scaled down to 224x224
+Rho: 0.6481

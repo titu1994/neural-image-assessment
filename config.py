@@ -8,10 +8,10 @@ ava_dataset_path = Path(r's:\datasets\AVA_dataset\AVA.txt')
 base_dir = Path(__file__).dirname()
 dataset_path = base_dir.joinpath('dataset')
 weights_dir = base_dir.joinpath('weights')
-weights_file = weights_dir.joinpath(model_prefix + '_weights_2.h5')
+weights_file = weights_dir.joinpath(model_prefix + '_weights.h5')
 weights_epoch_file = weights_dir.joinpath(
-    model_prefix + '_weights_2.{epoch:02d}-{val_loss:.3f}.h5')
-weights_top_file = weights_dir.joinpath(model_prefix+'_weights_top2.h5')
+    model_prefix + '_weights_{epoch:02d}-{val_loss:.3f}.h5')
+weights_top_file = weights_dir.joinpath(model_prefix+'_top_weights.h5')
 log_dir = base_dir.joinpath('logs')
 temp_dir = base_dir.joinpath('temp')
 if not temp_dir.exists():

@@ -1,4 +1,5 @@
 from keras.callbacks import TensorBoard
+from keras import backend as K
 
 class TensorBoardBatch(TensorBoard):
     """ modification to the TensorBoard callback to perform
@@ -13,7 +14,7 @@ class TensorBoardBatch(TensorBoard):
 
     def on_batch_end(self, batch, logs=None):
         logs = logs or {}
-
+        logs['lr'] = K.get_value(self.model.optimizer.lr)
         for name, value in logs.items():
             if name in ['batch', 'size']:
                 continue
@@ -27,7 +28,7 @@ class TensorBoardBatch(TensorBoard):
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
-
+        logs['lr'] = K.get_value(self.model.optimizer.lr)
         for name, value in logs.items():
             if name in ['batch', 'size']:
                 continue

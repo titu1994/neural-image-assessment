@@ -1,24 +1,23 @@
-import numpy as np
 from keras import backend as K
-from keras.models import Model
-from keras.layers import Input, Dropout, Dense
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler
-from keras.optimizers import Adam
-from tqdm import tqdm
-from utils.image_utils import preprocess_for_evaluation
-from keras_tqdm import TQDMCallback, TQDMNotebookCallback
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.optimizers import Adam, SGD
+from keras_tqdm import TQDMCallback
+import numpy as np
+import time
 import bcolz
 import joblib
+from tqdm import tqdm
+
 from ava_dataset import AvaDataset
-# from utils.data_loader import train_generator, val_generator
+from clr_callback import CyclicLR
 from config import *
 from image_preprocessing import ImageDataGenerator, randomCropFlips, \
     centerCrop224
 from nasnet_model import *
-#from quick_model import *
+# from quick_model import *
+# from incept_resnet_model import *
 from tensorboard_batch import TensorBoardBatch
 from utils.score_utils import srcc
-
 
 def earth_mover_loss(y_true, y_pred):
     cdf_ytrue = K.cumsum(y_true, axis=-1)
@@ -41,6 +40,7 @@ def calc_srcc(model, gen, test_size, batch_size):
     rho = srcc(y_test, y_pred)
     print("srcc = {}".format(rho))
 
+
 def lr_schedule(epoch):
     lr = 0.0003
     if epoch > 3:
@@ -51,8 +51,8 @@ def lr_schedule(epoch):
         lr = 0.00001
     return lr
 
-def train_top_layers(nima_model, dataset, imggen):
 
+def train_top_layers(nima_model, dataset, imggen):
     batch_size = 256
     print("generating features")
     base_model = nima_model.base_model
@@ -61,9 +61,6 @@ def train_top_layers(nima_model, dataset, imggen):
     for layer in base_model.layers:
         layer.trainable = False
     base_model.compile(optimizer, loss=earth_mover_loss)
-
-    # features = bcolz.open(bc_path_features)
-
 
     def gen_features():
         scores = []
@@ -106,28 +103,31 @@ def train_top_layers(nima_model, dataset, imggen):
                                      save_best_only=True,
                                      mode='min')
     tensorboard = TensorBoardBatch(log_dir=log_dir)
-    scheduler = LearningRateScheduler(lr_schedule)
-    callbacks = [scheduler, checkpoint_top, tensorboard, TQDMCallback()]
-
     optimizer = Adam(lr=0.0003, decay=0.005)
+    clr = CyclicLR(base_lr=0.0001, max_lr=0.003,
+                   step_size=2 * (len(dataset.train_scores) // batch_size),
+                   mode='triangular')
+    early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=15,
+                                   verbose=0, mode='auto')
+    callbacks = [clr, early_stopping, checkpoint_top, tensorboard,
+                 TQDMCallback()]
     model_top.compile(optimizer, loss=earth_mover_loss)
 
     print("training top layers")
-    model_top.fit(x=features, y=scores, batch_size=128, epochs=13,
-               verbose=0, callbacks=callbacks, validation_split=0.9,
-               shuffle=True)
+    model_top.fit(x=features, y=scores, batch_size=128, epochs=40,
+                  verbose=0, callbacks=callbacks, validation_split=0.9,
+                  shuffle=True)
 
     nima_model.model.load_weights(weights_top_file, by_name=True)
 
+
 def main():
     dataset = AvaDataset(dataset_path=dataset_path,
-                         base_images_path=base_images_path,
-                         max_train=15000, max_test=5000)
-    optimizer = Adam(lr=1e-4)
+                         base_images_path=base_images_path)
+
     nima_model = NimaModel()
     model = nima_model.model
     batch_size = 64
-
 
     # set up image data generators
     imggen = ImageDataGenerator(preprocessing_function=randomCropFlips())
@@ -145,44 +145,49 @@ def main():
                                           image_size=PRE_CROP_IMAGE_SIZE,
                                           cropped_image_size=IMAGE_SIZE)
 
-    tensorboard = TensorBoardBatch(log_dir=log_dir)
-    scheduler = LearningRateScheduler(lr_schedule)
-    pretrain = not weights_file.exists()
+    tensorboard = TensorBoardBatch(write_graph=False, log_dir="logs/{}".format(
+        time.strftime("%Y%m%d-%H%M%S")))
+    # scheduler = LearningRateScheduler(lr_schedule)
 
-    if pretrain:
-        train_top_layers(nima_model=nima_model, dataset=dataset, imggen=imggen)
+    if weights_file.exists():
+        print("loading weights")
+        model.load_weights(weights_file)
     else:
-        if weights_file.exists():
-            print("loading weights")
-            model.load_weights(weights_file)
-    model.compile(optimizer, loss=earth_mover_loss)
-
+        train_top_layers(nima_model=nima_model, dataset=dataset, imggen=imggen)
 
     checkpoint = ModelCheckpoint(weights_file, monitor='val_loss', verbose=1,
                                  save_weights_only=True, save_best_only=True,
                                  mode='min')
-    checkpoint_epoch = ModelCheckpoint(weights_epoch_file, monitor='val_loss', verbose=1,
+    checkpoint_epoch = ModelCheckpoint(weights_epoch_file, monitor='val_loss',
+                                       verbose=1,
                                        save_weights_only=True, mode='min')
-    callbacks = [scheduler, checkpoint, checkpoint_epoch, tensorboard, TQDMCallback()]
+    epochs = 25
+    optimizer = SGD(lr=0.0003, momentum=0.9, nesterov=True)
 
-    epochs = 10
-    batch_size = 64
-    optimizer = Adam(lr=0.0003)
+    clr = CyclicLR(base_lr=0.000001, max_lr=0.003,
+                   step_size=(len(dataset.train_scores) // batch_size),
+                   mode='triangular')
+    callbacks = [clr, checkpoint, checkpoint_epoch, tensorboard,
+                 TQDMCallback()]
+
     # start training
     for layer in model.layers:
         layer.trainable = True
     model.compile(optimizer, loss=earth_mover_loss)
     print("training whole model")
-    model.fit_generator(trn_gen,
-                        steps_per_epoch=(len(dataset.train_scores) // batch_size),
-                        epochs=epochs, verbose=0, callbacks=callbacks,
-                        validation_data=val_gen,
-                        validation_steps=(dataset.test_size // batch_size),
-                        workers=16,
-                        )
+    # model.fit_generator(trn_gen,
+    #                     steps_per_epoch=(
+    #                                 len(dataset.train_scores) // batch_size),
+    #                     epochs=epochs, verbose=0, callbacks=callbacks,
+    #                     validation_data=val_gen,
+    #                     validation_steps=(dataset.test_size // batch_size),
+    #                     workers=16,
+    #                     initial_epoch=0
+    #                     )
     print("calculating spearman's rank correlation coefficient")
     calc_srcc(model=model, gen=val_gen, test_size=dataset.test_size,
               batch_size=batch_size)
+
 
 if __name__ == '__main__':
     main()

@@ -19,7 +19,7 @@ There's also a script sort_lightroom_collection.py, which will sort a Adobe Ligh
 
 ### Arguments:
 ```
--dir    : Pass the relative/full path of a directory containing a set of images. Only png, jpg and jpeg images will be scored.
+--dir    : Pass the relative/full path of a directory containing a set of images. Only png, jpg and jpeg images will be scored.
 --img    : Pass one or more relative/full paths of images to score them. Can support all image types supported by PIL.
 ```
 
