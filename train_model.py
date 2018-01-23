@@ -175,15 +175,15 @@ def main():
         layer.trainable = True
     model.compile(optimizer, loss=earth_mover_loss)
     print("training whole model")
-    model.fit_generator(trn_gen,
-                        steps_per_epoch=(
-                                    len(dataset.train_scores) // batch_size),
-                        epochs=epochs, verbose=0, callbacks=callbacks,
-                        validation_data=val_gen,
-                        validation_steps=(dataset.test_size // batch_size),
-                        workers=16,
-                        initial_epoch=0
-                        )
+    # model.fit_generator(trn_gen,
+    #                     steps_per_epoch=(
+    #                                 len(dataset.train_scores) // batch_size),
+    #                     epochs=epochs, verbose=0, callbacks=callbacks,
+    #                     validation_data=val_gen,
+    #                     validation_steps=(dataset.test_size // batch_size),
+    #                     workers=16,
+    #                     initial_epoch=0
+    #                     )
     print("calculating spearman's rank correlation coefficient")
     calc_srcc(model=model, gen=val_gen, test_size=dataset.test_size,
               batch_size=batch_size)
