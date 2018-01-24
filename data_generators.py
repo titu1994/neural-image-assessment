@@ -1,6 +1,6 @@
 
 from image_preprocessing import ImageDataGenerator, randomCropFlips, \
-    centerCrop224
+    centerCrop
 generator = ImageDataGenerator(preprocessing_function=randomCropFlips())
 batch_size = 64
 
@@ -12,7 +12,7 @@ def get_batches(x, y, gen=generator, shuffle=True, batch_size=batch_size,):
     # save_to_dir=r's:/temp/genimg', save_format='jpg')
 
 
-generator_valid = ImageDataGenerator(preprocessing_function=centerCrop224())
+generator_valid = ImageDataGenerator(preprocessing_function=centerCrop())
 
 
 def get_batches_valid(x, y, gen=generator_valid, shuffle=False,

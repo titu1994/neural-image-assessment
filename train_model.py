@@ -2,6 +2,7 @@ from keras import backend as K
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam, SGD
 from keras_tqdm import TQDMCallback
+from keras.layers import Input
 import numpy as np
 import time
 import bcolz
@@ -12,7 +13,8 @@ from ava_dataset import AvaDataset
 from clr_callback import CyclicLR
 from config import *
 from image_preprocessing import ImageDataGenerator, randomCropFlips, \
-    centerCrop224
+    centerCrop
+#from nasnet_large_model import *
 from nasnet_model import *
 # from quick_model import *
 # from incept_resnet_model import *
@@ -130,14 +132,14 @@ def main():
     batch_size = 64
 
     # set up image data generators
-    imggen = ImageDataGenerator(preprocessing_function=randomCropFlips())
+    imggen = ImageDataGenerator(preprocessing_function=randomCropFlips(IMAGE_SIZE))
     trn_gen = imggen.flow_from_filelist(dataset.train_image_paths,
                                         dataset.train_scores,
                                         shuffle=True, batch_size=batch_size,
                                         image_size=PRE_CROP_IMAGE_SIZE,
                                         cropped_image_size=IMAGE_SIZE)
 
-    gen_cent = ImageDataGenerator(preprocessing_function=centerCrop224())
+    gen_cent = ImageDataGenerator(preprocessing_function=centerCrop(IMAGE_SIZE))
     val_gen = gen_cent.flow_from_filelist(dataset.test_image_paths,
                                           dataset.test_scores,
                                           shuffle=False,
@@ -148,7 +150,7 @@ def main():
     tensorboard = TensorBoardBatch(write_graph=False, log_dir="logs/{}".format(
         time.strftime("%Y%m%d-%H%M%S")))
     # scheduler = LearningRateScheduler(lr_schedule)
-
+    #
     if weights_file.exists():
         print("loading weights")
         model.load_weights(weights_file)
@@ -175,15 +177,15 @@ def main():
         layer.trainable = True
     model.compile(optimizer, loss=earth_mover_loss)
     print("training whole model")
-    # model.fit_generator(trn_gen,
-    #                     steps_per_epoch=(
-    #                                 len(dataset.train_scores) // batch_size),
-    #                     epochs=epochs, verbose=0, callbacks=callbacks,
-    #                     validation_data=val_gen,
-    #                     validation_steps=(dataset.test_size // batch_size),
-    #                     workers=16,
-    #                     initial_epoch=0
-    #                     )
+    model.fit_generator(trn_gen,
+                        steps_per_epoch=(
+                                    len(dataset.train_scores) // batch_size),
+                        epochs=epochs, verbose=0, callbacks=callbacks,
+                        validation_data=val_gen,
+                        validation_steps=(dataset.test_size // batch_size),
+                        workers=16,
+                        initial_epoch=0
+                        )
     print("calculating spearman's rank correlation coefficient")
     calc_srcc(model=model, gen=val_gen, test_size=dataset.test_size,
               batch_size=batch_size)

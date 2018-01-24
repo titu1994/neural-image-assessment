@@ -30,18 +30,18 @@ except ImportError:
     pil_image = None
 
 
-def randomCropFlips():
+def randomCropFlips(size=224):
     transform = transforms.Compose([
         transforms.Lambda(lambda x: randomHorizontalFlip(x, u=0.5)),
-        transforms.Lambda(lambda x: randomCrop(x, 224)),
+        transforms.Lambda(lambda x: randomCrop(x, size)),
         transforms.Lambda(lambda x: preprocess_input(x, mode='tf')),
     ])
     return transform
 
 
-def centerCrop224():
+def centerCrop(size=224):
     transform = transforms.Compose([
-        transforms.Lambda(lambda x: cropCenter(x, height=224, width=224)),
+        transforms.Lambda(lambda x: cropCenter(x, height=size, width=size)),
         transforms.Lambda(lambda x: preprocess_input(x, mode='tf')),
     ])
     return transform
