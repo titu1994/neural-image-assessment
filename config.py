@@ -3,8 +3,10 @@ from path import Path
 # get the AVA dataset from here:
 # http://academictorrents.com/details/71631f83b11d3d79d8f84efe0a7e12f0ac001460
 model_prefix = "nasnet"
-base_images_path = Path(r's:\datasets\AVA_dataset\images')
-ava_dataset_path = Path(r's:\datasets\AVA_dataset\AVA.txt')
+
+base_images_path = Path('AVA_dataset/images').abspath()
+if not base_images_path.exists():
+    base_images_path = Path(r's:\datasets\AVA_dataset\images')
 base_dir = Path(__file__).dirname()
 dataset_path = base_dir.joinpath('dataset')
 weights_dir = base_dir.joinpath('weights')
@@ -24,5 +26,4 @@ IMAGE_SIZE = 224
 target_size = (IMAGE_SIZE, IMAGE_SIZE)
 
 assert base_images_path.exists()
-assert ava_dataset_path.exists()
 assert dataset_path.exists()
