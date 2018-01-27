@@ -3,6 +3,8 @@ from path import Path
 # get the AVA dataset from here:
 # http://academictorrents.com/details/71631f83b11d3d79d8f84efe0a7e12f0ac001460
 model_prefix = "nasnet"
+# if running on jupyter notebook set this to true for better progressbars
+use_notebook = True
 
 base_images_path = Path('AVA_dataset/resized_images').abspath()
 if not base_images_path.exists():

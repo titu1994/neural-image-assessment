@@ -1,7 +1,10 @@
 from path import Path
-from config import dataset_path, base_images_path
+from config import dataset_path, base_images_path, use_notebook
 import numpy as np
-from tqdm import tqdm
+if use_notebook:
+    from tqdm import tqdm_notebook as tqdm
+else:
+    from tqdm import tqdm
 from sklearn.preprocessing import normalize
 
 
