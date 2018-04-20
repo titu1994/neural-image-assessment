@@ -54,8 +54,10 @@ def earth_mover_loss(y_true, y_pred):
     samplewise_emd = K.sqrt(K.mean(K.square(K.abs(cdf_ytrue - cdf_ypred)), axis=-1))
     return K.mean(samplewise_emd)
 
+NUM_FEATURES = 1056
+
 image_size = 224
-ip = Input(shape=(1056,))
+ip = Input(shape=(NUM_FEATURES,))
 x = Dropout(0.75)(ip)
 x = Dense(10, activation='softmax')(x)
 
@@ -79,7 +81,7 @@ epochs = 20
 TRAIN_RECORD_PATH = 'weights/nasnet_train.tfrecord'
 VAL_RECORD_PATH = 'weights/nasnet_val.tfrecord'
 
-model.fit_generator(features_generator(TRAIN_RECORD_PATH, batchsize=batchsize, shuffle=True),
+model.fit_generator(features_generator(TRAIN_RECORD_PATH, NUM_FEATURES, batchsize=batchsize, shuffle=True),
                     steps_per_epoch=(500000. // batchsize),
                     epochs=epochs, verbose=1, callbacks=callbacks,
                     validation_data=features_generator(VAL_RECORD_PATH, batchsize=batchsize, shuffle=False),
