@@ -56,9 +56,9 @@ from keras.layers import add
 from keras.regularizers import l2
 from keras.utils.data_utils import get_file
 from keras.engine.topology import get_source_inputs
-from keras.applications.imagenet_utils import _obtain_input_shape
-from keras.applications.inception_v3 import preprocess_input
-from keras.applications.imagenet_utils import decode_predictions
+from keras_applications.imagenet_utils import _obtain_input_shape
+from keras_applications.inception_v3 import preprocess_input
+from keras_applications.imagenet_utils import decode_predictions
 from keras import backend as K
 
 _BN_DECAY = 0.9997
