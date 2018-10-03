@@ -56,3 +56,6 @@ This is a 3 step process:
 # Requirements
 - Keras
 - Tensorflow (CPU to evaluate, GPU to train)
+- Numpy
+- Path.py
+- PIL
