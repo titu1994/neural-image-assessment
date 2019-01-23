@@ -97,7 +97,7 @@ def train_generator(batchsize, shuffle=True):
     '''
     with tf.Session() as sess:
         # create a dataset
-        train_dataset = tf.data.Dataset().from_tensor_slices((train_image_paths, train_scores))
+        train_dataset = tf.data.Dataset.from_tensor_slices((train_image_paths, train_scores))
         train_dataset = train_dataset.map(parse_data, num_parallel_calls=2)
 
         train_dataset = train_dataset.batch(batchsize)
@@ -134,7 +134,7 @@ def val_generator(batchsize):
         a batch of samples (X_images, y_scores)
     '''
     with tf.Session() as sess:
-        val_dataset = tf.data.Dataset().from_tensor_slices((val_image_paths, val_scores))
+        val_dataset = tf.data.Dataset.from_tensor_slices((val_image_paths, val_scores))
         val_dataset = val_dataset.map(parse_data_without_augmentation)
 
         val_dataset = val_dataset.batch(batchsize)
