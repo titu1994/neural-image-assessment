@@ -84,5 +84,5 @@ VAL_RECORD_PATH = 'weights/nasnet_large_val.tfrecord'
 model.fit_generator(features_generator(TRAIN_RECORD_PATH, NUM_FEATURES, batchsize=batchsize, shuffle=True),
                     steps_per_epoch=(500000. // batchsize),
                     epochs=epochs, verbose=1, callbacks=callbacks,
-                    validation_data=features_generator(VAL_RECORD_PATH, batchsize=batchsize, shuffle=False),
+                    validation_data=features_generator(VAL_RECORD_PATH, NUM_FEATURES, batchsize=batchsize, shuffle=False),
                     validation_steps=(5000. // batchsize))
